@@ -1,0 +1,25 @@
+name: Import verified Tether source
+on:
+  push:
+    paths:
+      - tether-source.zip
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and unpack the prepared app
+        run: |
+          echo 'b4565252bb2da34aa135cd1ba7fe40aeb96c4f80b8bc1a1a60b7f665926975a5  tether-source.zip' | sha256sum -c -
+          unzip -oq tether-source.zip
+      - name: Commit the complete source and Pages build
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --all
+          git diff --cached --quiet && exit 0
+          git commit -m 'Import Tether source and GitHub Pages build'
+          git push origin HEAD:main
