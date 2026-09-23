@@ -1,0 +1,8 @@
+# Keep reviews focused on source rather than generated and vendored files.
+/docs/** linguist-generated=true
+/vendor/** linguist-vendored=true
+/build/sites-vite-plugin.ts linguist-vendored=true
+
+# Use consistent line endings for text; keep recordings as binary files.
+* text=auto
+*.wav binary

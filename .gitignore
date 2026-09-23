@@ -47,3 +47,6 @@ next-env.d.ts
 
 # TypeScript build cache
 *.tsbuildinfo
+
+# One-time source transfer archive
+/tether-source.zip
