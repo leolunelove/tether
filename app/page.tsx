@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 
 type Space={id:string;you:string;partner:string|null;pending:boolean;mine:boolean;revision:number;listened:boolean;hasAudio:boolean;duration:number;invite:string|null};
 type Demo={holder:number;side:number;revision:number;listened:boolean;audio:string;duration:number};
-const initialDemo:Demo={holder:0,side:0,revision:0,listened:false,audio:ASSET_BASE+"demo-alex.wav",duration:9.585805};
+const initialDemo:Demo={holder:0,side:0,revision:0,listened:false,audio:ASSET_BASE+"demo-harry.wav",duration:6.212562};
 const format=(s:number)=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`;
 const wave=[12,22,32,20,42,54,33,21,38,27,14];
 async function request(path:string,options?:RequestInit){const response=await apiResponse(path,options);const data=await response.json() as {space:Space|null;error?:string;ok?:boolean;sessionToken?:string};if(!response.ok)throw new Error(data.error||"Something went wrong. Please try again.");if(data.sessionToken)saveSessionToken(data.sessionToken);return data;}
@@ -18,7 +18,7 @@ export default function Home(){
   const [playing,setPlaying]=useState<"incoming"|"draft"|null>(null),[progress,setProgress]=useState(0),[error,setError]=useState(""),[copied,setCopied]=useState(false);
   const playbackKind=useRef<"incoming"|"draft"|null>(null);
   const audio=useRef<HTMLAudioElement|null>(null),recorder=useRef<MediaRecorder|null>(null),stream=useRef<MediaStream|null>(null),started=useRef(0),objectUrl=useRef<string|null>(null);
-  const live=!!space,mine=space?space.mine:demo.holder===demo.side,pending=space?.pending||false,partner=space?.partner||(demo.side===0?"Alex":"You"),you=space?.you||(demo.side===0?"You":"Alex"),listened=space?space.listened:demo.listened;
+  const live=!!space,mine=space?space.mine:demo.holder===demo.side,pending=space?.pending||false,partner=space?.partner||(demo.side===0?"Harry":"You"),you=space?.you||(demo.side===0?"You":"Harry"),listened=space?space.listened:demo.listened;
   const hasAudio=space?space.hasAudio:true,duration=space?space.duration:demo.duration;
   const incoming=mine&&hasAudio&&!listened&&!pending;
   const stopAudio=useCallback(()=>{audio.current?.pause();audio.current=null;playbackKind.current=null;if(objectUrl.current){URL.revokeObjectURL(objectUrl.current);objectUrl.current=null;}setPlaying(null);setProgress(0);},[]);
@@ -62,7 +62,7 @@ export default function Home(){
       instance.start(200);started.current=Date.now();setSeconds(0);setDraft(null);setRecording(true);
     }catch(e){stream.current?.getTracks().forEach(t=>t.stop());const err=e as Error;setError(err.name==="NotAllowedError"?"Allow microphone access in your browser, then try again.":err.name==="NotFoundError"?"No microphone was found. Connect one and try again.":err.message);}finally{setBusy(false);}
   }
-  async function sample(){setBusy(true);setError("");try{const response=await fetch(ASSET_BASE+(demo.side===0?"demo-you.wav":"demo-alex.wav"));if(!response.ok)throw new Error("The sample couldn’t load. Please try again.");setDraft(await response.blob());setDraftSeconds(demo.side===0?8.288662:9.585805);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+  async function sample(){setBusy(true);setError("");try{const response=await fetch(ASSET_BASE+(demo.side===0?"demo-you.wav":"demo-harry.wav"));if(!response.ok)throw new Error("The sample couldn’t load. Please try again.");setDraft(await response.blob());setDraftSeconds(demo.side===0?8.288662:6.212562);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
   async function pass(){if(!draft||busy)return;setBusy(true);setError("");stopAudio();try{
     if(space){const form=new FormData();form.set("audio",draft,"voice");form.set("duration",String(draftSeconds));form.set("revision",String(space.revision));const data=await request("/api/voice",{method:"POST",body:form});setSpace(data.space);}else{const src=URL.createObjectURL(draft);if(demo.audio.startsWith("blob:"))URL.revokeObjectURL(demo.audio);setDemo(old=>({...old,holder:1-old.side,revision:old.revision+1,listened:false,audio:src,duration:draftSeconds}));}
     setDraft(null);
@@ -92,7 +92,7 @@ export default function Home(){
     <header className="topbar"><a className="brand" href={ASSET_BASE} aria-label="Tether home"><span className="brand-mark"><i/><i/></span>tether<span className="brand-period">.</span></a><span className="header-note">A space for two.</span><button className="text-button" onClick={()=>setDialog("help")}>How it works <ArrowUpRight size={15}/></button></header>
     <main className="main-wrap"><div className="space-heading"><div><p className="eyebrow">A CONNECTION WORTH KEEPING</p><h2>Your shared space<span>.</span></h2></div>{(!live||pending)&&<button className="outline-button" disabled={busy||recording||!loaded} onClick={openConnect}>{live?"Your invitation":"Make it yours"} <ArrowUpRight size={15}/></button>}</div>
       <section className={`space-card ${!mine?"is-away":""} ${recording||playing?"is-sounding":""} ${busy&&draft?"is-passing":""}`}>
-        <div className="card-top"><span className="space-id">{live?`${you} & ${space.partner||"…"}`:"YOU & ALEX"}{!live&&<span className="preview-tag">PREVIEW</span>}</span><span className="private-label"><LockKeyhole size={13}/> Just between you two</span></div>
+        <div className="card-top"><span className="space-id">{live?`${you} & ${space.partner||"…"}`:"YOU & HARRY"}{!live&&<span className="preview-tag">PREVIEW</span>}</span><span className="private-label"><LockKeyhole size={13}/> Just between you two</span></div>
         <div className="connection"><div className={`person ${mine?"active":""}`}><span className="avatar you">{you.charAt(0).toUpperCase()}</span><span>{you}</span></div><div className="connection-line"><span className="traveler"/></div><div className={`person ${!mine?"active":""}`}><span className="avatar them">{pending?"?":partner.charAt(0).toUpperCase()}</span><span>{pending?"Your person":partner}</span></div></div>
         <div className="state-copy" aria-live="polite"><span className="status-pill"><i/>{stateLabel}</span><h1>{title}</h1><p>{subtitle}</p></div>
         <div className="object-stage"><button className="voice-object" disabled={!mine||busy||pending} onClick={()=>draft?void play("draft"):primaryAction()} aria-label={draft?(playing==="draft"?"Pause recording preview":"Preview your recording"):buttonLabel}><span className="object-shine"/><span className="voice-wave">{wave.map((h,i)=><i key={i} style={{height:h,animationDelay:`${i*.07}s`}}/>)}</span></button><div className="object-shadow"/>{(recording||playing)&&<span className="record-time">{format(recording?seconds:progress)}<span> / {recording?"2:00":format(playing==="draft"?draftSeconds:duration)}</span></span>}</div>
@@ -105,7 +105,7 @@ export default function Home(){
         <div className="card-bottom"><span className="small-mark"><i/><i/></span><p>Listen. Take your time. Pass it on.</p><span className="bottom-detail">No rush. No noise.</span></div>
       </section>
       <div className="under-card"><span className="mini-orbit"/><p>One shared space. It only moves when you do.</p></div>
-      {!live&&<div className="demo-controls"><span>You’re trying a sample space.</span><button disabled={recording||busy} onClick={switchSide}>Try {demo.side===0?"Alex’s":"your"} side <ArrowRight size={12}/></button></div>}
+      {!live&&<div className="demo-controls"><span>You’re trying a sample space.</span><button disabled={recording||busy} onClick={switchSide}>Try {demo.side===0?"Harry’s":"your"} side <ArrowRight size={12}/></button></div>}
     </main>
     <footer className="site-footer"><span>A little less scrolling. A little more connection.</span><span>Made for the two of you <span className="footer-star">✳</span></span></footer>
     <Dialog open={dialog!==null} onOpenChange={open=>{if(!open&&!busy){setDialog(null);setError("");}}}><DialogContent className="tether-dialog"><DialogHeader><span className="dialog-mark"><span className="brand-mark"><i/><i/></span></span><DialogTitle>{dialog==="help"?"A conversation you share.":dialog==="invite"?"The other end is theirs.":invite?"Someone saved you a space.":"Who’s your person?"}</DialogTitle><DialogDescription>{dialog==="help"?"One space that travels between the two of you.":dialog==="invite"?"Send this invitation to the one person you want here.":invite?"Add your name to take the other end.":"Start with your name. Then invite someone to hold the other end."}</DialogDescription></DialogHeader>
