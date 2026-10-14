@@ -25,9 +25,9 @@ There is one current recording, no feed, and no message history.
 
 ## Start a space
 
-[Open Tether](https://leolunelove.github.io/tether/) to try the sample conversation. You can listen, use a sample reply, and switch sides to experience the exchange.
+[Open Tether](https://leolunelove.github.io/tether/) and choose **Try a sample** to preview the conversation. You can listen, use a sample reply, and switch sides to experience the exchange.
 
-Choose **Make it yours** to create a real space. Add your name and send the invitation to one person. Each invitation works once; each space belongs to exactly two people.
+Choose **Start a space** to create a real space. Add your name and send the invitation to one person. Each invitation works once; each space belongs to exactly two people.
 
 ## Your connection
 
