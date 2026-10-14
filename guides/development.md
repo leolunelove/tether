@@ -64,7 +64,7 @@ Local data is kept in `.wrangler/` and is excluded from version control. Product
 | `npm run db:generate` | Generate migrations after a schema change |
 | `npx tsc --noEmit` | Check TypeScript |
 
-After a database change, generate a new migration and apply that migration to the local database before testing. Production migrations are applied through the hosting workflow.
+After a database change, generate a new migration and apply that migration to the local database before testing. Also apply `drizzle/0001_voice_cleanup.sql` to the local database using the same `d1 execute` command. Production migrations are applied through the hosting workflow before deploying dependent API changes.
 
 ## Connection model
 
@@ -90,4 +90,10 @@ For service changes, also run `npm run build` and check the exchange using two s
 3. Listen to the end, reply, and pass it back. Confirm the previous recording is replaced.
 4. Refresh each browser and confirm each participant keeps the correct end.
 
-Use disposable test spaces and sample audio where possible. Check microphone capture on the intended devices when changing recording behavior. There is no automated test command committed to this repository.
+Use disposable test spaces and sample audio where possible. Check microphone capture on the intended devices when changing recording behavior. Run `npm test` for API regression checks using SQLite and a simulated object store. See [Our beta checklist](beta-checklist.md) for remaining device and release checks.
+
+## Recovery and deletion
+
+Space settings exposes a private recovery code. Restoring it rotates the participant credential and revokes the previous device. Pairing credentials are stored locally before requests so response loss can be recovered. Keep recovery codes out of logs and issue reports.
+
+Ending a space atomically queues audio cleanup and removes its database record. Cleanup is retried on later passes and end-space operations; configure an operational sweep before promising bounded deletion times.

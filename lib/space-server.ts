@@ -27,3 +27,27 @@ export function withCors(req:Request,response:Response){
   return new Response(response.body,{status:response.status,headers});
 }
 export function preflight(req:Request){try{sameOrigin(req);return withCors(req,new Response(null,{status:204}));}catch(error){return failure(error);}}
+
+export async function readJson(req:Request):Promise<Record<string,unknown>> {
+  const reader=req.body?.getReader(); if(!reader)throw new SpaceError("A request body is required.");
+  let length=0;const chunks:Uint8Array<ArrayBuffer>[]=[];
+  while(true){const {done,value}=await reader.read();if(done)break;length+=value.length;if(length>4096){await reader.cancel();throw new SpaceError("That request is too large.",413);}chunks.push(value);}
+  try{const value=JSON.parse(await new Blob(chunks).text());if(!value||typeof value!=="object"||Array.isArray(value))throw new Error();return value;}catch{throw new SpaceError("That request isn’t valid.");}
+}
+// Queue prefixes transactionally with deletion. Failed cleanup remains retryable.
+export async function cleanupVoices(){
+  const jobs=await db().prepare("SELECT prefix FROM voice_cleanup LIMIT 10").all<{prefix:string}>();
+  for(const job of jobs.results){try{
+    const objects=await bucket().list({prefix:job.prefix,limit:1000});
+    if(objects.objects.length)await bucket().delete(objects.objects.map(o=>o.key));
+    if(!objects.truncated)await db().prepare("DELETE FROM voice_cleanup WHERE prefix = ?").bind(job.prefix).run();
+  }catch{console.error("Voice cleanup pending");}}
+}
+
+// Only trust Cloudflare's client address at its edge; local tests use their own key.
+export async function limitAction(key:string,limit:number,windowMs:number){
+  const now=Date.now();
+  await db().prepare("DELETE FROM action_limits WHERE expires_at < ?").bind(now).run();
+  const row=await db().prepare("INSERT INTO action_limits (key,count,expires_at) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count = count + 1 RETURNING count").bind(await hash(key),now+windowMs).first<{count:number}>();
+  if(row&&row.count>limit)throw new SpaceError("Please take a moment before trying again.",429);
+}

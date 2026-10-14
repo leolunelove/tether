@@ -14,3 +14,6 @@ export const spaces = sqliteTable("spaces", {
   duration: integer("duration").notNull().default(0),
   updatedAt: integer("updated_at").notNull(),
 }, (table) => [uniqueIndex("idx_spaces_a_token").on(table.aToken), uniqueIndex("idx_spaces_b_token").on(table.bToken), uniqueIndex("idx_spaces_invite").on(table.invite)]);
+
+export const voiceCleanup = sqliteTable("voice_cleanup", { prefix: text("prefix").primaryKey() });
+export const actionLimits = sqliteTable("action_limits", { key: text("key").primaryKey(), count: integer("count").notNull(), expiresAt: integer("expires_at").notNull() });

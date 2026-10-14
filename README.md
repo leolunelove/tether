@@ -31,8 +31,8 @@ Choose **Make it yours** to create a real space. Add your name and send the invi
 
 ## Your connection
 
-- **Return in the same browser.** Clearing its site data loses access to your end. Account recovery and moving between devices are not available yet.
-- **Only the current recording is available.** A successful pass replaces the previous voice message.
+- **Save your recovery code.** Space settings lets you save a private code and move your end to another browser. Restoring revokes the previous device and code. Without a saved code or accessible device, lost access cannot be restored.
+- **Only the current recording is available.** A successful pass replaces the previous voice message. Space settings also lets either person end the space for both people and request deletion of its audio.
 - **Recordings require participant access.** They are stored on the voice service and are not end-to-end encrypted.
 - **Recording needs microphone permission.** Use a recent browser over HTTPS or localhost. Unsaved replies are lost if the page is closed or reloaded.
 
